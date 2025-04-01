@@ -1,0 +1,18 @@
+[project]
+name = "streamlit-template"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Rick Anderson", email = "rianders@docs.rutgers.edu" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "numpy>=2.2.3",
+    "pandas>=2.2.3",
+    "streamlit>=1.42.1",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
