@@ -1,71 +1,177 @@
-"""Utility functions for data processing and analysis."""
+"""Utility functions for the Word Definition Memory Game."""
 
-from typing import Optional
 import pandas as pd
-import numpy as np
+import random
+from typing import List, Dict, Tuple, Optional
 
-
-def get_sample_data(rows: int = 10) -> pd.DataFrame:
-    """Generate sample data for demonstration.
-
-    Args:
-        rows: Number of rows to generate, defaults to 10
-
-    Returns:
-        DataFrame with sample data including random numbers and dates
+def load_custom_word_pairs(file_path: str) -> Dict[str, str]:
     """
-    np.random.seed(42)  # For reproducibility
+    Load custom word-definition pairs from a CSV file.
+    
+    Args:
+        file_path: Path to CSV file with 'word' and 'definition' columns
+        
+    Returns:
+        Dictionary mapping words to their definitions
+    """
+    try:
+        df = pd.read_csv(file_path)
+        
+        # Validate the dataframe has required columns
+        required_cols = ['word', 'definition']
+        missing_cols = [col for col in required_cols if col not in df.columns]
+        
+        if missing_cols:
+            raise ValueError(f"CSV is missing required columns: {', '.join(missing_cols)}")
+        
+        # Convert to dictionary
+        word_dict = {row['word']: row['definition'] for _, row in df.iterrows()}
+        return word_dict
+    except Exception as e:
+        raise Exception(f"Error loading custom word pairs: {str(e)}")
 
-    return pd.DataFrame(
-        {
-            "date": pd.date_range(start="2024-01-01", periods=rows),
-            "value_a": np.random.randn(rows),
-            "value_b": np.random.randn(rows),
-            "category": np.random.choice(["A", "B", "C"], size=rows),
+def create_sample_csv() -> pd.DataFrame:
+    """
+    Create a sample CSV dataframe with word-definition pairs.
+    
+    Returns:
+        DataFrame with sample word-definition pairs
+    """
+    data = {
+        'word': [
+            'Algorithm', 'Bandwidth', 'Cache', 'Database',
+            'Atom', 'Biology', 'Chemistry', 'DNA',
+            'Allegory', 'Metaphor', 'Protagonist', 'Sonnet'
+        ],
+        'definition': [
+            'A step-by-step procedure for solving a problem or accomplishing a task',
+            'The maximum rate of data transfer across a given path',
+            'A temporary storage area where frequently accessed data can be stored for rapid access',
+            'An organized collection of structured information or data',
+            'The basic unit of matter consisting of a nucleus and electrons',
+            'The study of living organisms and their interactions with the environment',
+            'The study of matter, its properties, and the changes it undergoes',
+            'A molecule that carries genetic instructions for development and functioning of organisms',
+            'A story with hidden meaning, typically with moral or political significance',
+            'A figure of speech making an implicit comparison without using \'like\' or \'as\'',
+            'The main character in a story, often in conflict with an antagonist',
+            'A 14-line poem with a specific rhyme scheme and structure'
+        ],
+        'category': [
+            'Technology', 'Technology', 'Technology', 'Technology',
+            'Science', 'Science', 'Science', 'Science',
+            'Literature', 'Literature', 'Literature', 'Literature'
+        ]
+    }
+    
+    return pd.DataFrame(data)
+
+def calculate_score(pairs_found: int, total_pairs: int, attempts: int, time_seconds: int) -> int:
+    """
+    Calculate a score based on game performance.
+    
+    Args:
+        pairs_found: Number of pairs correctly matched
+        total_pairs: Total number of pairs in the game
+        attempts: Number of attempts made
+        time_seconds: Time taken in seconds
+        
+    Returns:
+        Score as an integer from 0-100
+    """
+    # Perfect score would be finding all pairs in minimum attempts (equal to total_pairs)
+    # and in reasonable time
+    
+    # Calculate completion percentage (50% of score)
+    completion_score = (pairs_found / total_pairs) * 50
+    
+    # Calculate efficiency (attempts compared to minimum possible) (30% of score)
+    min_attempts = total_pairs
+    max_attempts = total_pairs * 3  # Arbitrary upper bound
+    
+    efficiency = max(0, 1 - ((attempts - min_attempts) / (max_attempts - min_attempts)))
+    efficiency_score = efficiency * 30
+    
+    # Calculate time factor (20% of score)
+    # Assuming 5 seconds per pair is a good target time
+    target_time = total_pairs * 5
+    max_time = total_pairs * 15  # Arbitrary upper bound
+    
+    time_factor = max(0, 1 - ((time_seconds - target_time) / (max_time - target_time)))
+    time_score = time_factor * 20
+    
+    # Combine scores
+    total_score = int(completion_score + efficiency_score + time_score)
+    
+    # Ensure score is between 0 and 100
+    return max(0, min(100, total_score))
+
+def get_difficulty_settings(difficulty: str) -> Dict:
+    """
+    Get game settings based on difficulty level.
+    
+    Args:
+        difficulty: Difficulty level (Easy, Medium, Hard)
+        
+    Returns:
+        Dictionary with game settings
+    """
+    settings = {
+        "Easy": {
+            "pairs": 4,
+            "time_limit": 120,  # 2 minutes
+            "reveal_time": 1.0  # seconds to show non-matching cards
+        },
+        "Medium": {
+            "pairs": 6,
+            "time_limit": 180,  # 3 minutes
+            "reveal_time": 0.8
+        },
+        "Hard": {
+            "pairs": 8,
+            "time_limit": 240,  # 4 minutes
+            "reveal_time": 0.5
+        },
+        "Expert": {
+            "pairs": 10,
+            "time_limit": 300,  # 5 minutes
+            "reveal_time": 0.3
         }
-    )
+    }
+    
+    return settings.get(difficulty, settings["Easy"])
 
-
-def process_data(df: pd.DataFrame) -> pd.DataFrame:
-    """Process input dataframe by adding computed columns.
-
-    Args:
-        df: Input DataFrame that should contain 'value_a' and 'value_b' columns
-
-    Returns:
-        DataFrame with additional computed columns
+def split_words_into_categories(word_dict: Dict[str, str], 
+                               categories: Optional[List[str]] = None) -> Dict[str, Dict[str, str]]:
     """
-    # Create a copy to avoid modifying the input
-    processed = df.copy()
-
-    # Add some computed columns if the required columns exist
-    if "value_a" in processed.columns and "value_b" in processed.columns:
-        processed["sum"] = processed["value_a"] + processed["value_b"]
-        processed["mean"] = (processed["value_a"] + processed["value_b"]) / 2
-        processed["abs_diff"] = abs(processed["value_a"] - processed["value_b"])
-
-    return processed
-
-
-def validate_dataframe(
-    df: pd.DataFrame, required_columns: Optional[list[str]] = None
-) -> bool:
-    """Validate that a DataFrame meets the required schema.
-
+    Split a flat dictionary of words into categories.
+    
     Args:
-        df: DataFrame to validate
-        required_columns: List of column names that must be present
-
+        word_dict: Dictionary mapping words to definitions
+        categories: Optional list of category names (generates random assignment if None)
+        
     Returns:
-        True if validation passes, raises ValueError otherwise
+        Dictionary mapping category names to word-definition dictionaries
     """
-    if required_columns is None:
-        required_columns = ["value_a", "value_b"]
-
-    missing_cols = [col for col in required_columns if col not in df.columns]
-    if missing_cols:
-        raise ValueError(
-            f"DataFrame is missing required columns: {', '.join(missing_cols)}"
-        )
-
-    return True
+    all_words = list(word_dict.keys())
+    result = {}
+    
+    # If no categories provided, create generic ones
+    if not categories:
+        categories = ["Set 1", "Set 2", "Set 3"]
+    
+    # Calculate words per category
+    words_per_category = max(1, len(all_words) // len(categories))
+    
+    # Shuffle words for random assignment
+    random.shuffle(all_words)
+    
+    # Assign words to categories
+    for i, category in enumerate(categories):
+        start_idx = i * words_per_category
+        end_idx = start_idx + words_per_category if i < len(categories) - 1 else len(all_words)
+        
+        category_words = all_words[start_idx:end_idx]
+        result[category] = {word: word_dict[word] for word in category_words}
+    
+    return result

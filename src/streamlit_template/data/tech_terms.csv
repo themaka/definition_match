@@ -1,0 +1,21 @@
+word,definition,category
+API,"Application Programming Interface - a set of rules that allows programs to communicate with each other",Technology
+CSS,"Cascading Style Sheets - a language used to describe the presentation of a document written in HTML",Web Development
+DNS,"Domain Name System - a system that translates human-readable domain names to IP addresses",Networking
+HTTP,"Hypertext Transfer Protocol - the foundation protocol for data exchange on the web",Web Development
+JSON,"JavaScript Object Notation - a lightweight data interchange format used for transmitting data",Data Formats
+Kernel,"The core component of an operating system that manages operations of the computer and hardware",Operating Systems
+Latency,"The time delay between the cause and the effect of some physical change in a system",Networking
+Middleware,"Software that acts as a bridge between an operating system and applications running on it",Software
+NoSQL,"A database approach designed for storing, retrieving and managing non-relational data",Databases
+OOP,"Object-Oriented Programming - a programming paradigm based on the concept of objects",Programming
+Python,"A high-level, interpreted programming language known for its readability and simplicity",Programming Languages
+REST,"Representational State Transfer - an architectural style for designing networked applications",Web Development
+SQL,"Structured Query Language - a standard language for storing, manipulating and retrieving data in databases",Databases
+TCP/IP,"Transmission Control Protocol/Internet Protocol - communication protocols used in computer networks",Networking
+UI,"User Interface - the space where interactions between humans and machines occur",Design
+VM,"Virtual Machine - an emulation of a computer system that provides the functionality of a physical computer",Virtualization
+XML,"Extensible Markup Language - a markup language that defines rules for encoding documents",Data Formats
+YAML,"YAML Ain't Markup Language - a human-readable data serialization standard",Data Formats
+CDN,"Content Delivery Network - a system of distributed servers that deliver web content to users based on geographic location",Web Infrastructure
+CRUD,"Create, Read, Update, Delete - four basic operations of persistent storage",Programming
