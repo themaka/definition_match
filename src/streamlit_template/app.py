@@ -145,22 +145,16 @@ def handle_card_click(card_index: int) -> None:
         card2_type, card2_text, card2_pair = st.session_state.all_cards[int(idx2)]
         
         # Check if they form a matching pair (one word, one definition)
-        if (card1_type != card2_type) and (card1_pair == card2_text) and (card2_pair == card1_text):
+        is_match = (card1_type != card2_type) and (card1_pair == card2_text) and (card2_pair == card1_text)
+        
+        if is_match:
             # It's a match! Add both cards to matched pairs
             st.session_state.matched_pairs.extend(st.session_state.selected_cards)
-            
-            # Clear selected cards immediately for matches
+            # Clear selected cards
             st.session_state.selected_cards = []
         else:
-            # For non-matches, we'll keep the cards in the selected_cards list
-            # They will be displayed until the next interaction
-            
-            # Store the non-matching pair in session state
-            if 'non_match_time' not in st.session_state:
-                st.session_state.non_match_time = time.time()
-                
-            # We'll clear these in the main loop rather than here
-            # This allows both cards to remain visible
+            # It's not a match - Add a button to flip cards back
+            st.session_state.showing_non_match = True
 
 def main() -> None:
     """Main application function."""
@@ -217,17 +211,9 @@ def main() -> None:
                 minutes, seconds = divmod(elapsed, 60)
                 st.metric("Time", f"{minutes:02d}:{seconds:02d}")
     
-    # Check if we need to clear non-matching cards
-    if 'non_match_time' in st.session_state and st.session_state.selected_cards:
-        current_time = time.time()
-        # Give players 2 seconds to see both cards
-        if current_time - st.session_state.non_match_time > 2.0:
-            # Clear the selected cards after delay
-            st.session_state.selected_cards = []
-            # Reset the timer
-            del st.session_state.non_match_time
-            # Force a rerun to update the UI
-            st.rerun()
+    # Initialize the showing_non_match state variable if it doesn't exist
+    if 'showing_non_match' not in st.session_state:
+        st.session_state.showing_non_match = False
     
     # Main game area
     if not st.session_state.game_active:
@@ -367,6 +353,14 @@ def main() -> None:
                                     on_click=handle_card_click,
                                     args=(card_idx,)
                                 )
+            
+            # If we're showing a non-match, display a "Continue" button
+            if st.session_state.showing_non_match and len(st.session_state.selected_cards) == 2:
+                st.markdown("### These cards don't match.")
+                if st.button("Continue", type="primary"):
+                    st.session_state.selected_cards = []
+                    st.session_state.showing_non_match = False
+                    st.rerun()
 
 if __name__ == "__main__":
     main()
