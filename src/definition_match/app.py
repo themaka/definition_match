@@ -197,46 +197,52 @@ def main() -> None:
     
     # Sidebar for game controls
     with st.sidebar:
-        st.header("Game Settings")
+        st.markdown("### Game Settings")
         
-        # Category selection
+        # Category selection with more compact UI
         category = st.selectbox(
-            "Select Category", 
+            "Category", 
             options=list(WORD_SETS.keys()),
             index=0
         )
         
-        # Use our new visual difficulty selector
-        st.markdown("---")
+        # Use our new compact difficulty selector
         selected_difficulty = render_difficulty_selector()
         
-        # Start game button - make it more prominent
-        st.markdown("### Ready to Play?")
+        # Start game button - make it more prominent but compact
         if st.button("🎮 Start New Game", type="primary", use_container_width=True):
             start_game(category, selected_difficulty)
         
-        # Show instructions
+        # Show instructions in a compact expander
         with st.expander("How to Play"):
             st.markdown("""
-            1. Click on cards to flip them over
-            2. Try to match each word with its correct definition
-            3. The game is complete when all pairs are matched
-            4. Fewer attempts = better score!
+            - Click cards to flip them over
+            - Match each word with its definition
+            - Game completes when all pairs are matched
+            - Fewer attempts = better score
             """)
         
-        # Display stats during active game
+        # Display stats during active game in a more compact form
         if st.session_state.game_active:
-            st.divider()
-            st.subheader("Game Statistics")
+            st.markdown("---")
+            st.markdown("### Game Stats")
             
             # Calculate completion percentage
             total_pairs = len(st.session_state.all_cards) // 2
             matched_count = len(st.session_state.matched_pairs) // 2
             completion = (matched_count / total_pairs) * 100
             
-            st.metric("Progress", f"{matched_count}/{total_pairs} pairs")
+            # More compact stats display
+            cols = st.columns(2)
+            
+            with cols[0]:
+                st.metric("Progress", f"{matched_count}/{total_pairs}")
+            
+            with cols[1]:
+                st.metric("Attempts", st.session_state.attempts)
+            
+            # Progress bar doesn't need a label
             st.progress(completion / 100)
-            st.metric("Attempts", st.session_state.attempts)
             
             # Display timer if game is in progress
             if st.session_state.start_time and matched_count < total_pairs:
@@ -250,94 +256,86 @@ def main() -> None:
     
     # Main game area
     if not st.session_state.game_active:
-        # Show welcome screen when no game is active
-        st.header("Welcome to the Word Definition Memory Game!")
-        st.write("Select a category and difficulty level, then click 'New Game' to start.")
+        # Welcome screen design - more compact
+        st.header("Word Definition Memory Game")
+        st.write("Select a category and difficulty in the sidebar, then click 'Start New Game'.")
         
-        # Display sample words from each category
-        for cat_name, word_dict in WORD_SETS.items():
-            with st.expander(f"Sample Words: {cat_name}"):
-                sample_words = list(word_dict.keys())[:3]
-                for word in sample_words:
-                    st.markdown(f"**{word}**: {word_dict[word]}")
+        # Use tabs for sample words and custom upload to save vertical space
+        tab1, tab2 = st.tabs(["Sample Categories", "Upload Custom Words"])
+        
+        with tab1:
+            # Display sample words from each category in a more compact layout
+            for cat_name, word_dict in WORD_SETS.items():
+                # Skip custom categories in the samples tab
+                if "Custom" in cat_name:
+                    continue
                     
-        # Add file uploader for custom words
-        st.subheader("Upload Custom Words")
-        uploaded_file = st.file_uploader("Choose a CSV file with words and definitions", type="csv")
+                with st.expander(f"{cat_name}"):
+                    sample_words = list(word_dict.keys())[:3]
+                    for word in sample_words:
+                        st.markdown(f"**{word}**: {word_dict[word]}")
         
-        # Add CSV format helper information
-        with st.expander("CSV File Format Information"):
-            st.markdown("""
-            ### CSV File Format
+        with tab2:
+            # Add file uploader for custom words
+            uploaded_file = st.file_uploader("Choose a CSV file with words and definitions", type="csv")
             
-            Your CSV file should contain at least these two columns:
-            - **word**: The term to be matched
-            - **definition**: The meaning of the term
-            
-            Optionally, you can include a third column:
-            - **category**: To organize terms into different groups
-            
-            #### Example CSV content:
-            ```
-            word,definition,category
-            Photosynthesis,Process by which plants use sunlight to create energy,Biology
-            Algorithm,Step-by-step procedure for calculations or problem-solving,Computer Science
-            Metaphor,Figure of speech that makes an implicit comparison,Literature
-            ```
-            
-            #### Notes:
-            - The first row should contain the column headers
-            - Make sure there are no empty cells in the required columns
-            - You can include as many terms as you want
-            - Without a category column, all terms will be placed in "Custom Words"
-            """)
-            
-            # Add a download link for a sample CSV template
-            st.markdown("""
-            #### Need a template?
-            Use this sample CSV as a starting point for your own custom terms.
-            """)
-            
-            sample_csv = """word,definition,category
+            # Add CSV format helper information
+            with st.expander("CSV File Format"):
+                st.markdown("""
+                Your CSV file needs these columns:
+                - **word**: The term to match
+                - **definition**: The meaning
+                - **category**: (Optional) For grouping terms
+                
+                **Example:**
+                ```
+                word,definition,category
+                Algorithm,Step-by-step procedure,Computer Science
+                Photosynthesis,Process using sunlight,Biology
+                ```
+                """)
+                
+                # Add a download link for a sample CSV template
+                sample_csv = """word,definition,category
 Algorithm,Step-by-step procedure for calculations or problem-solving,Computer Science
 Photosynthesis,Process by which plants use sunlight to create energy,Biology
 Metaphor,Figure of speech that makes an implicit comparison,Literature
 Velocity,Rate of change of position with respect to time,Physics
 Database,Organized collection of structured information,Computer Science
 """
+                
+                st.download_button(
+                    label="Download Template",
+                    data=sample_csv,
+                    file_name="custom_words_template.csv",
+                    mime="text/csv"
+                )
             
-            st.download_button(
-                label="Download Sample CSV Template",
-                data=sample_csv,
-                file_name="custom_words_template.csv",
-                mime="text/csv"
-            )
-        
-        if uploaded_file is not None:
-            try:
-                df = pd.read_csv(uploaded_file)
-                
-                # Validate the dataframe has required columns
-                required_cols = ['word', 'definition']
-                missing_cols = [col for col in required_cols if col not in df.columns]
-                
-                if missing_cols:
-                    st.error(f"CSV is missing required columns: {', '.join(missing_cols)}")
-                else:
-                    # Process the custom words
-                    if 'category' in df.columns:
-                        # Group by category
-                        for category_name, group in df.groupby('category'):
-                            word_dict = {row['word']: row['definition'] for _, row in group.iterrows()}
-                            WORD_SETS[f"Custom: {category_name}"] = word_dict
-                    else:
-                        # No category column, use a default category
-                        word_dict = {row['word']: row['definition'] for _, row in df.iterrows()}
-                        WORD_SETS["Custom Words"] = word_dict
+            if uploaded_file is not None:
+                try:
+                    df = pd.read_csv(uploaded_file)
                     
-                    st.success(f"Successfully loaded {len(df)} custom words!")
-            except Exception as e:
-                st.error(f"Error processing file: {str(e)}")
+                    # Validate the dataframe has required columns
+                    required_cols = ['word', 'definition']
+                    missing_cols = [col for col in required_cols if col not in df.columns]
+                    
+                    if missing_cols:
+                        st.error(f"CSV is missing required columns: {', '.join(missing_cols)}")
+                    else:
+                        # Process the custom words
+                        if 'category' in df.columns:
+                            # Group by category
+                            for category_name, group in df.groupby('category'):
+                                word_dict = {row['word']: row['definition'] for _, row in group.iterrows()}
+                                WORD_SETS[f"Custom: {category_name}"] = word_dict
+                        else:
+                            # No category column, use a default category
+                            word_dict = {row['word']: row['definition'] for _, row in df.iterrows()}
+                            WORD_SETS["Custom Words"] = word_dict
+                        
+                        st.success(f"Successfully loaded {len(df)} custom words!")
+                except Exception as e:
+                    st.error(f"Error processing file: {str(e)}")
     else:
         # Game board
         cols_per_row = 4

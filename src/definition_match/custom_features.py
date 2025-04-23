@@ -200,7 +200,7 @@ def apply_matched_card_style(placeholder, card_text, card_type):
 
 def render_difficulty_selector():
     """
-    Render a visually appealing difficulty selector.
+    Render a compact but accessible difficulty selector.
     
     Returns:
         str: The selected difficulty level
@@ -210,50 +210,42 @@ def render_difficulty_selector():
     # Initialize selected difficulty if needed
     if 'selected_difficulty' not in st.session_state:
         st.session_state.selected_difficulty = "Easy"
-        
-    # Create columns for the difficulty options
-    diff_cols = st.columns(3)
     
-    # Render each difficulty option
-    for i, (diff_name, diff_info) in enumerate(DIFFICULTIES.items()):
-        with diff_cols[i]:
+    # Layout options in a more compact horizontal format
+    cols = st.columns(3)
+    
+    # Define a more compact representation
+    diff_options = {
+        "Easy": {"icon": "😊", "color": "#28a745", "pairs": 4},
+        "Medium": {"icon": "🧠", "color": "#ffc107", "pairs": 6},
+        "Hard": {"icon": "🔥", "color": "#dc3545", "pairs": 8}
+    }
+    
+    # Render the buttons in a row
+    for i, (diff_name, diff_info) in enumerate(diff_options.items()):
+        with cols[i]:
             is_selected = st.session_state.selected_difficulty == diff_name
-            diff_style = "selected" if is_selected else ""
+            button_type = "primary" if is_selected else "secondary"
             
-            # Render custom button with HTML
-            html = f"""
-            <div class="difficulty-btn {diff_style}" 
-                 style="background-color: {diff_info['color']}20; 
-                        border: 2px solid {diff_info['color'] if is_selected else diff_info['color'] + '40'};
-                        color: {diff_info['color']};">
-                <div style="font-size: 1.5rem;">{diff_info['icon']}</div>
-                <div style="font-weight: bold;">{diff_name}</div>
-                <div style="font-size: 0.8rem;">{diff_info['pairs']} pairs</div>
-            </div>
-            """
-            
-            # Use a button with the same name to handle clicks
-            if st.button(diff_name, key=f"diff_{diff_name}", use_container_width=True):
+            if st.button(
+                f"{diff_info['icon']} {diff_name}",
+                key=f"diff_{diff_name}",
+                type=button_type,
+                use_container_width=True,
+                help=f"{diff_name}: {diff_info['pairs']} pairs to match"
+            ):
                 st.session_state.selected_difficulty = diff_name
                 st.rerun()
     
-    # Display more info about selected difficulty
+    # Display a compact info box with difficulty details
     selected = st.session_state.selected_difficulty
     diff_info = DIFFICULTIES[selected]
     
+    # More compact info display
     st.markdown(
-        f"""
-        <div style="padding: 10px; border-radius: 5px; 
-             background-color: {diff_info['color']}20; 
-             border-left: 4px solid {diff_info['color']};">
-            <h4 style="margin: 0; color: {diff_info['color']};">
-                {selected} Mode {diff_info['icon']}
-            </h4>
-            <p>{diff_info['desc']}</p>
-            <p><strong>Cards to match:</strong> {diff_info['pairs']} pairs</p>
-            <p><strong>Time limit:</strong> {diff_info['time_limit'] // 60} minutes</p>
-        </div>
-        """, 
+        f"""<div style="padding:8px; background-color:{diff_info['color']}20; border-left:3px solid {diff_info['color']}; font-size:0.9em;">
+        <strong>{selected}</strong> · {diff_info['pairs']} pairs · {diff_info['time_limit']//60}min
+        </div>""", 
         unsafe_allow_html=True
     )
     
