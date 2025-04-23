@@ -1,4 +1,5 @@
 version = 1
+revision = 1
 requires-python = ">=3.12"
 
 [[package]]
@@ -93,7 +94,7 @@ name = "click"
 version = "8.1.8"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "colorama", marker = "platform_system == 'Windows'" },
+    { name = "colorama", marker = "sys_platform == 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/b9/2e/0090cbf739cee7d23781ad4b89a9894a41538e4fcf4c31dcdd705b78eb8b/click-8.1.8.tar.gz", hash = "sha256:ed53c9d8990d83c2a27deae68e4ee337473f6330c040a31d4225c9574d16096a", size = 226593 }
 wheels = [
@@ -107,6 +108,23 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/d8/53/6f443c9a4a8358a93a6792e2acffb9d9d5cb0a5cfd8802644b7b1c9a02e4/colorama-0.4.6.tar.gz", hash = "sha256:08695f5cb7ed6e0531a20572697297273c47b8cae5a63ffc6d6ed5c201be6e44", size = 27697 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/d1/d6/3965ed04c63042e047cb6a3e6ed1a63a35087b6a609aa3a15ed8ac56c221/colorama-0.4.6-py2.py3-none-any.whl", hash = "sha256:4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6", size = 25335 },
+]
+
+[[package]]
+name = "definition-match"
+version = "0.1.0"
+source = { editable = "." }
+dependencies = [
+    { name = "numpy" },
+    { name = "pandas" },
+    { name = "streamlit" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "numpy", specifier = ">=2.2.3" },
+    { name = "pandas", specifier = ">=2.2.3" },
+    { name = "streamlit", specifier = ">=1.42.1" },
 ]
 
 [[package]]
@@ -499,6 +517,7 @@ wheels = [
 name = "rpds-py"
 version = "0.23.0"
 source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/ca/0e/4c797078d00dbf1f63af96e4b3beffb67f71230f58442272b4b1962a61c8/rpds_py-0.23.0.tar.gz", hash = "sha256:ffac3b13182dc1bf648cde2982148dc9caf60f3eedec7ae639e05636389ebf5d", size = 26808 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/57/cd/c57b77ae0c8514b316c65668e3d016857b738738496a77faf64346c9f943/rpds_py-0.23.0-cp312-cp312-macosx_10_12_x86_64.whl", hash = "sha256:d1f3baf652aeb91775eb3343535890156b07e0cbb2a7b72651f4bbaf7323d40f", size = 364451 },
     { url = "https://files.pythonhosted.org/packages/8f/d7/76cdd973a44be9692db2ae1f38264e565af99c2b9aabbcabb87670618322/rpds_py-0.23.0-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:6593dc9b225f8fc900df43c40625c998b8fa99ba78ec69bcd073fe3fb1018a5d", size = 349905 },
@@ -582,28 +601,11 @@ dependencies = [
     { name = "toml" },
     { name = "tornado" },
     { name = "typing-extensions" },
-    { name = "watchdog", marker = "platform_system != 'Darwin'" },
+    { name = "watchdog", marker = "sys_platform != 'darwin'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/29/73/6dd5d2fd3d03a37507cacbdd45908744ed1e7b7789a5593eb3fc5d503a2a/streamlit-1.42.1.tar.gz", hash = "sha256:4e13c47b0385bd633cc2777cb5da277129edb774db417ee77d8f349e9c7357ba", size = 9168865 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/94/b5/055141fb429cf3c34730612c48fc30c89aee9173300c20b01d73c7bf8d6d/streamlit-1.42.1-py2.py3-none-any.whl", hash = "sha256:f995642dfe14f5e93acf1956a909f17aa3c395d5aa0bc580461d7fc9a452bbb2", size = 9559714 },
-]
-
-[[package]]
-name = "streamlit-template"
-version = "0.1.0"
-source = { editable = "." }
-dependencies = [
-    { name = "numpy" },
-    { name = "pandas" },
-    { name = "streamlit" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "numpy", specifier = ">=2.2.3" },
-    { name = "pandas", specifier = ">=2.2.3" },
-    { name = "streamlit", specifier = ">=1.42.1" },
 ]
 
 [[package]]
