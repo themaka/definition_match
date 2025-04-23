@@ -7,7 +7,7 @@ import time
 from typing import List, Dict, Tuple
 
 # Import custom modules
-from custom_features import add_custom_css, apply_matched_card_style
+from custom_features import add_custom_css, apply_matched_card_style, DIFFICULTIES, render_difficulty_selector
 
 # Set page configuration
 st.set_page_config(
@@ -97,9 +97,8 @@ def start_game(category: str, difficulty: str) -> None:
         category: Category for word pairs
         difficulty: Difficulty level determining number of pairs
     """
-    # Determine number of pairs based on difficulty
-    pair_counts = {"Easy": 4, "Medium": 6, "Hard": 8}
-    count = pair_counts.get(difficulty, 4)
+    # Get number of pairs based on difficulty from shared DIFFICULTIES constant
+    count = DIFFICULTIES.get(difficulty, DIFFICULTIES["Easy"])["pairs"]
     
     # Get word pairs and set up the game
     pairs = get_word_pairs(category, count)
@@ -207,16 +206,14 @@ def main() -> None:
             index=0
         )
         
-        # Difficulty selection
-        difficulty = st.select_slider(
-            "Difficulty",
-            options=["Easy", "Medium", "Hard"],
-            value=st.session_state.difficulty
-        )
+        # Use our new visual difficulty selector
+        st.markdown("---")
+        selected_difficulty = render_difficulty_selector()
         
-        # Start game button
-        if st.button("New Game"):
-            start_game(category, difficulty)
+        # Start game button - make it more prominent
+        st.markdown("### Ready to Play?")
+        if st.button("🎮 Start New Game", type="primary", use_container_width=True):
+            start_game(category, selected_difficulty)
         
         # Show instructions
         with st.expander("How to Play"):
