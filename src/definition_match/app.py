@@ -264,6 +264,55 @@ def main() -> None:
         # Add file uploader for custom words
         st.subheader("Upload Custom Words")
         uploaded_file = st.file_uploader("Choose a CSV file with words and definitions", type="csv")
+        
+        # Add CSV format helper information
+        with st.expander("CSV File Format Information"):
+            st.markdown("""
+            ### CSV File Format
+            
+            Your CSV file should contain at least these two columns:
+            - **word**: The term to be matched
+            - **definition**: The meaning of the term
+            
+            Optionally, you can include a third column:
+            - **category**: To organize terms into different groups
+            
+            #### Example CSV content:
+            ```
+            word,definition,category
+            Photosynthesis,Process by which plants use sunlight to create energy,Biology
+            Algorithm,Step-by-step procedure for calculations or problem-solving,Computer Science
+            Metaphor,Figure of speech that makes an implicit comparison,Literature
+            ```
+            
+            #### Notes:
+            - The first row should contain the column headers
+            - Make sure there are no empty cells in the required columns
+            - You can include as many terms as you want
+            - Without a category column, all terms will be placed in "Custom Words"
+            """)
+            
+            # Add a download link for a sample CSV template
+            st.markdown("""
+            #### Need a template?
+            Use this sample CSV as a starting point for your own custom terms.
+            """)
+            
+            sample_csv = """word,definition,category
+Algorithm,Step-by-step procedure for calculations or problem-solving,Computer Science
+Photosynthesis,Process by which plants use sunlight to create energy,Biology
+Metaphor,Figure of speech that makes an implicit comparison,Literature
+Velocity,Rate of change of position with respect to time,Physics
+Database,Organized collection of structured information,Computer Science
+"""
+            
+            st.download_button(
+                label="Download Sample CSV Template",
+                data=sample_csv,
+                file_name="custom_words_template.csv",
+                mime="text/csv"
+            )
+        
         if uploaded_file is not None:
             try:
                 df = pd.read_csv(uploaded_file)
