@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 authors = [
-    { name = "Rick Anderson", email = "rianders@docs.rutgers.edu" }
+    { name = "Michael Gradin", email = "maka.gradin@uoes.rutgers.edu" }
 ]
 requires-python = ">=3.12"
 dependencies = [
