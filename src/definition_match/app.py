@@ -280,7 +280,7 @@ def main() -> None:
                         # Group by category
                         for category_name, group in df.groupby('category'):
                             word_dict = {row['word']: row['definition'] for _, row in group.iterrows()}
-                            WORD_SETS[category_name] = word_dict
+                            WORD_SETS[f"Custom: {category_name}"] = word_dict
                     else:
                         # No category column, use a default category
                         word_dict = {row['word']: row['definition'] for _, row in df.iterrows()}
@@ -310,8 +310,37 @@ def main() -> None:
             st.metric("Efficiency Score", f"{efficiency:.1f}%", 
                       help="100% means you found all pairs without any mistakes")
             
-            if st.button("Play Again"):
-                reset_game()
+            # Get difficulty info for the current difficulty including emoji
+            current_category = category
+            current_difficulty = st.session_state.difficulty
+            difficulty_info = DIFFICULTIES.get(current_difficulty, DIFFICULTIES["Easy"])
+            difficulty_emoji = difficulty_info["icon"]
+            
+            # Format the category name nicely
+            category_display = current_category
+            
+            # Add a category emoji based on the category type
+            category_emoji = "📚" # Default
+            if "Technology" in current_category:
+                category_emoji = "💻"
+            elif "Science" in current_category:
+                category_emoji = "🔬"
+            elif "Literature" in current_category:
+                category_emoji = "📖"
+            elif "Custom" in current_category:
+                category_emoji = "✨"
+            
+            # Single, clearer play again button with category and difficulty info
+            if st.button(f"🎮 Play Again with {category_emoji} {category_display} ({current_difficulty} {difficulty_emoji})", 
+                         type="primary", use_container_width=True):
+                # Start a new game with these settings
+                start_game(current_category, current_difficulty)
+                
+                # Force a rerun to immediately update the UI with the new game
+                st.rerun()
+            
+            # Add a reminder about the sidebar for changing settings
+            st.info("💡 You can change the category or difficulty in the sidebar before starting a new game.")
         else:
             # Active game - display the card grid
             # Determine grid layout based on number of cards
