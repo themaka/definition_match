@@ -6,12 +6,18 @@ import random
 import time
 from typing import List, Dict, Tuple
 
+# Import custom modules
+from custom_features import add_custom_css, apply_matched_card_style
+
 # Set page configuration
 st.set_page_config(
     page_title="Word Definition Memory Game",
     page_icon="🧠",
     layout="wide"
 )
+
+# Apply custom CSS
+add_custom_css()
 
 # Initialize session state variables if they don't exist
 if 'game_active' not in st.session_state:
@@ -152,6 +158,8 @@ def handle_card_click(card_index: int) -> None:
             st.session_state.matched_pairs.extend(st.session_state.selected_cards)
             # Clear selected cards
             st.session_state.selected_cards = []
+            # Play success sound (could be added in future version)
+            # st.session_state.play_success_sound = True
         else:
             # It's not a match - Add a button to flip cards back
             st.session_state.showing_non_match = True
@@ -296,37 +304,38 @@ def main() -> None:
                 for i in range(cols_per_row):
                     card_idx = row_idx + i
                     if card_idx < num_cards:
-                        card_type, card_text, _ = st.session_state.all_cards[card_idx]
+                        card_type, card_text, pair_text = st.session_state.all_cards[card_idx]
                         card_key = f"{card_idx}:{card_text}"
                         
                         # Determine card state
                         if card_key in st.session_state.matched_pairs:
-                            # Matched card - show as green
-                            card_color = "primary"
-                            disabled = True
-                            show_content = True
+                            # Matched card - show with special styling
+                            with cols[i]:
+                                # Use custom HTML/CSS for matched cards with improved accessibility
+                                card_html = f"""
+                                <div class="matched-card-container">
+                                    <button class="matched-card" 
+                                        style="width: 100%; height: 120px; {'font-size: 1.2rem; font-weight: bold;' if card_type == 'word' else 'font-size: 0.9rem;'}" 
+                                        disabled 
+                                        aria-label="Matched {'word' if card_type == 'word' else 'definition'}: {card_text}" 
+                                        role="button">
+                                        {card_text}
+                                        <span class="visually-hidden">(Matched)</span>
+                                    </button>
+                                </div>
+                                """
+                                st.markdown(card_html, unsafe_allow_html=True)
                         elif card_key in st.session_state.selected_cards:
                             # Selected card - show content
                             card_color = "secondary"
-                            disabled = True
-                            show_content = True
-                        else:
-                            # Unselected card - show back
-                            card_color = "secondary"
-                            disabled = False
-                            show_content = False
-                        
-                        # Create the card button
-                        with cols[i]:
-                            # Use different styles for word and definition cards
-                            if show_content:
+                            with cols[i]:
                                 if card_type == "word":
                                     # Words get a header style
                                     st.button(
                                         f"## {card_text}",
                                         key=f"card_{card_idx}",
                                         type=card_color,
-                                        disabled=disabled,
+                                        disabled=True,
                                         use_container_width=True,
                                         on_click=handle_card_click,
                                         args=(card_idx,)
@@ -337,18 +346,21 @@ def main() -> None:
                                         card_text,
                                         key=f"card_{card_idx}",
                                         type=card_color,
-                                        disabled=disabled,
+                                        disabled=True,
                                         use_container_width=True,
                                         on_click=handle_card_click,
                                         args=(card_idx,)
                                     )
-                            else:
-                                # For hidden cards, show a question mark
+                        else:
+                            # Unselected card - show back
+                            card_color = "secondary"
+                            # For hidden cards, show a question mark
+                            with cols[i]:
                                 st.button(
                                     "❓",
                                     key=f"card_{card_idx}",
                                     type=card_color,
-                                    disabled=disabled,
+                                    disabled=False,
                                     use_container_width=True,
                                     on_click=handle_card_click,
                                     args=(card_idx,)

@@ -19,7 +19,7 @@ def add_custom_css():
         align-items: center;
         justify-content: center;
         text-align: center;
-        transition: transform 0.3s;
+        transition: transform 0.3s, background-color 0.3s;
         margin: 5px;
     }
     
@@ -35,10 +35,30 @@ def add_custom_css():
         font-weight: bold;
     }
     
-    /* Matched pairs */
-    .matched {
+    /* Matched pairs - using a more accessible light green */
+    .matched-card {
         background-color: #d4edda !important;
         color: #155724 !important;
+        border: 2px solid #28a745 !important;
+        position: relative;
+    }
+    
+    /* Checkmark icon for matched pairs */
+    .matched-card:after {
+        content: "✓";
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        font-size: 1.2rem;
+        color: #28a745;
+    }
+    
+    /* Adding a pattern for additional visual differentiation */
+    .matched-card {
+        background-image: linear-gradient(45deg, rgba(40, 167, 69, 0.05) 25%, transparent 25%, 
+                          transparent 50%, rgba(40, 167, 69, 0.05) 50%, rgba(40, 167, 69, 0.05) 75%, 
+                          transparent 75%, transparent) !important;
+        background-size: 10px 10px !important;
     }
     
     /* Title styling */
@@ -99,4 +119,45 @@ def add_to_leaderboard(player_name: str, category: str,
     # Append to existing leaderboard
     st.session_state.leaderboard = pd.concat([st.session_state.leaderboard, new_entry], ignore_index=True)
     
+def apply_matched_card_style(placeholder, card_text, card_type):
+    """
+    Apply custom HTML/CSS for matched cards for better accessibility.
     
+    Args:
+        placeholder: Streamlit container to render HTML
+        card_text: Text content of the card
+        card_type: Type of card ("word" or "definition")
+    """
+    # Create accessible matched card with appropriate styling and ARIA attributes
+    if card_type == "word":
+        html_content = f"""
+        <div class="matched-card-container" style="height: 120px; margin: 5px;">
+            <button 
+                class="matched-card" 
+                style="width: 100%; height: 100%; padding: 10px; font-weight: bold; font-size: 1.2rem;" 
+                disabled 
+                aria-label="Matched word: {card_text}" 
+                aria-disabled="true" 
+                role="button">
+                {card_text}
+                <span class="visually-hidden">(Matched)</span>
+            </button>
+        </div>
+        """
+    else:
+        html_content = f"""
+        <div class="matched-card-container" style="height: 120px; margin: 5px;">
+            <button 
+                class="matched-card" 
+                style="width: 100%; height: 100%; padding: 10px; font-size: 0.9rem;" 
+                disabled 
+                aria-label="Matched definition: {card_text}" 
+                aria-disabled="true" 
+                role="button">
+                {card_text}
+                <span class="visually-hidden">(Matched)</span>
+            </button>
+        </div>
+        """
+    
+    placeholder.markdown(html_content, unsafe_allow_html=True)
