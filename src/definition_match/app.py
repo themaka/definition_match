@@ -129,6 +129,13 @@ def handle_card_click(card_index: int) -> None:
     Args:
         card_index: Index of the clicked card
     """
+    # First check if we are showing a non-match already
+    # If so, prevent further card selection until the player clicks "Continue"
+    if st.session_state.showing_non_match:
+        # We don't process any new card clicks when showing non-matched pairs
+        # The UI will show a message instructing the player to click "Continue"
+        return
+    
     # Skip if card is already matched or selected
     card_type, card_text, pair_text = st.session_state.all_cards[card_index]
     
@@ -164,9 +171,30 @@ def handle_card_click(card_index: int) -> None:
             # It's not a match - Add a button to flip cards back
             st.session_state.showing_non_match = True
 
+def verify_game_state() -> None:
+    """
+    Verify and repair game state if inconsistencies are found.
+    This helps prevent game-breaking bugs if unexpected interactions occur.
+    """
+    # Check if selected cards is somehow greater than 2 (which shouldn't happen)
+    if hasattr(st.session_state, 'selected_cards') and len(st.session_state.selected_cards) > 2:
+        # Reset to a consistent state
+        st.session_state.selected_cards = []
+        st.session_state.showing_non_match = False
+    
+    # Ensure showing_non_match is False if we don't have exactly 2 selected cards
+    if (hasattr(st.session_state, 'showing_non_match') and 
+        hasattr(st.session_state, 'selected_cards') and
+        st.session_state.showing_non_match and 
+        len(st.session_state.selected_cards) != 2):
+        st.session_state.showing_non_match = False
+
 def main() -> None:
     """Main application function."""
     st.title("🧠 Word Definition Memory Game")
+    
+    # Verify game state for consistency
+    verify_game_state()
     
     # Sidebar for game controls
     with st.sidebar:
@@ -356,19 +384,36 @@ def main() -> None:
                             card_color = "secondary"
                             # For hidden cards, show a question mark
                             with cols[i]:
+                                # Disable all unselected cards if we're showing a non-match
+                                is_disabled = st.session_state.showing_non_match
+                                
+                                # Add a tooltip if cards are disabled due to non-match state
+                                tooltip = None
+                                if is_disabled:
+                                    tooltip = "Click 'Continue' before selecting more cards"
+                                
                                 st.button(
                                     "❓",
                                     key=f"card_{card_idx}",
                                     type=card_color,
-                                    disabled=False,
+                                    disabled=is_disabled,
                                     use_container_width=True,
                                     on_click=handle_card_click,
-                                    args=(card_idx,)
+                                    args=(card_idx,),
+                                    help=tooltip
                                 )
             
             # If we're showing a non-match, display a "Continue" button
             if st.session_state.showing_non_match and len(st.session_state.selected_cards) == 2:
-                st.markdown("### These cards don't match.")
+                # Create a colored info box with more prominent message
+                st.markdown("""
+                <div style="background-color: #e9f5fe; color: #084298; padding: 15px; border-radius: 5px; 
+                border-left: 5px solid #084298; margin: 10px 0;">
+                    <h3 style="margin-top: 0;">These cards don't match</h3>
+                    <p>You need to click "Continue" before selecting more cards.</p>
+                </div>
+                """, unsafe_allow_html=True)
+                
                 if st.button("Continue", type="primary"):
                     st.session_state.selected_cards = []
                     st.session_state.showing_non_match = False
