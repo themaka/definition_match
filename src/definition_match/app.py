@@ -32,6 +32,8 @@ if 'start_time' not in st.session_state:
     st.session_state.start_time = None
 if 'difficulty' not in st.session_state:
     st.session_state.difficulty = "Easy"
+if 'just_uploaded_csv' not in st.session_state:
+    st.session_state.just_uploaded_csv = False
 
 # Sample word-definition pairs for different categories
 WORD_SETS = {
@@ -192,6 +194,37 @@ def main() -> None:
     """Main application function."""
     st.title("🧠 Word Definition Memory Game")
     
+    # Use a purely client-side approach for showing mobile tips only on small screens
+    st.markdown("""
+    <div id="mobile-tip" style="display: none;">
+        <div style="padding: 1rem; border-radius: 0.5rem; background-color: #cfe2ff; border-left: 4px solid #084298; margin-bottom: 1rem;">
+            <span style="font-size: 1.2rem;">ℹ️</span> 
+            <strong>Small screen detected</strong>: For the best experience, try landscape mode and tap the '>' at top-left to access settings.
+        </div>
+    </div>
+    
+    <script>
+        // Only show the mobile tip if screen width is under 600px and we haven't shown it before
+        function updateMobileTip() {
+            const mobileTip = document.getElementById('mobile-tip');
+            if (mobileTip) {
+                const isSmallScreen = window.innerWidth < 600;
+                const tipAlreadyShown = sessionStorage.getItem('mobile_tip_shown') === 'true';
+                
+                if (isSmallScreen && !tipAlreadyShown) {
+                    mobileTip.style.display = "block";
+                    sessionStorage.setItem('mobile_tip_shown', 'true');
+                } else {
+                    mobileTip.style.display = "none";
+                }
+            }
+        }
+        
+        // Run immediately
+        updateMobileTip();
+    </script>
+    """, unsafe_allow_html=True)
+    
     # Verify game state for consistency
     verify_game_state()
     
@@ -199,12 +232,44 @@ def main() -> None:
     with st.sidebar:
         st.markdown("### Game Settings")
         
-        # Category selection with more compact UI
-        category = st.selectbox(
-            "Category", 
-            options=list(WORD_SETS.keys()),
-            index=0
-        )
+        # Group categories to separate built-in from custom categories
+        built_in_categories = [cat for cat in WORD_SETS.keys() if not cat.startswith("Custom")]
+        custom_categories = [cat for cat in WORD_SETS.keys() if cat.startswith("Custom")]
+        
+        # If we have custom categories, show them in an organized dropdown
+        if custom_categories:
+            all_categories = built_in_categories + ["---"] + custom_categories
+            selected_index = 0  # Default to first built-in category
+            
+            # If this is right after a CSV upload, default to the first custom category
+            if 'just_uploaded_csv' in st.session_state and st.session_state.just_uploaded_csv:
+                selected_index = len(built_in_categories) + 1  # +1 for the separator
+                st.session_state.just_uploaded_csv = False
+            
+            # Create an organized category selection dropdown
+            category_option = st.selectbox(
+                "Category", 
+                options=all_categories,
+                index=selected_index,
+                format_func=lambda x: "──────────" if x == "---" else x
+            )
+            
+            # Handle the separator option
+            if category_option == "---":
+                # If they select the separator, default to the first custom category if available
+                if custom_categories:
+                    category = custom_categories[0]
+                else:
+                    category = built_in_categories[0]
+            else:
+                category = category_option
+        else:
+            # Simple selection for built-in categories only
+            category = st.selectbox(
+                "Category", 
+                options=built_in_categories,
+                index=0
+            )
         
         # Use our new compact difficulty selector
         selected_difficulty = render_difficulty_selector()
@@ -390,15 +455,42 @@ Database,Organized collection of structured information,Computer Science
             st.info("💡 You can change the category or difficulty in the sidebar before starting a new game.")
         else:
             # Active game - display the card grid
-            # Determine grid layout based on number of cards
-            if num_cards <= 8:
-                cols_per_row = 4
-            elif num_cards <= 12:
-                cols_per_row = 4
-            else:
-                cols_per_row = 4
+            # Determine grid layout based on screen width using a placeholder
+            layout_check = st.empty()
+            layout_check.markdown("""
+            <script>
+                // Get screen width and set a session storage item
+                const screenWidth = window.innerWidth;
+                sessionStorage.setItem('screen_width', screenWidth);
+                
+                // Update a hidden element with the screen info
+                const infoElement = document.createElement('div');
+                infoElement.id = 'screen-info';
+                infoElement.style.display = 'none';
+                infoElement.innerText = screenWidth.toString();
+                document.body.appendChild(infoElement);
+            </script>
+            """, unsafe_allow_html=True)
             
-            # Create rows of cards
+            # Determine grid layout based on number of cards and screen size
+            # Default to 4 columns, but we'll reduce for smaller screens
+            cols_per_row = 4
+            num_cards = len(st.session_state.all_cards)
+            
+            # Small screens get fewer columns based on card count
+            # These values would ideally be determined by actual screen width
+            # but for now we'll base it on card count as a simple adaptive approach
+            if num_cards <= 8:
+                cols_per_row = 4  # 2x2 grid for 4 pairs
+            elif num_cards <= 12:
+                cols_per_row = 3  # 4x3 grid for 6 pairs 
+            else:
+                cols_per_row = 4  # 4x4 grid for 8 pairs
+            
+            # Add a CSS class to help with responsive sizing
+            card_count_class = f"card-count-{num_cards}"
+            
+            # Create rows of cards with responsive layout
             for row_idx in range(0, num_cards, cols_per_row):
                 cols = st.columns(cols_per_row)
                 
